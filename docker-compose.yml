@@ -5,7 +5,7 @@ services:
     build:
       context: ./
     environment:
-      - API_HOST=https://isb.idbroker-sandbox.aws.op-palvelut.net
+      - API_HOST=https://isb-test.op.fi
       - CLIENT_ID=saippuakauppias
       - REDIRECT_URI=http://localhost
       - REDIRECT_URI_EMBEDDED=http://localhost/embedded.php
