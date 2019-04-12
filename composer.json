@@ -1,0 +1,12 @@
+{
+    "require": {
+        "league/oauth2-client": "2.3",
+        "gree/jose": "2.2"
+    },
+    "autoload": {
+        "psr-4": {
+          "Osuuspankki\\": "src/"
+        },
+        "files": [ "src/utils.php" ]
+    }
+}

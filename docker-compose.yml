@@ -1,0 +1,18 @@
+version: '2'
+services:
+  demosp:
+    container_name: isb-integration-example
+    build:
+      context: ./
+    environment:
+      - API_HOST=https://isb.idbroker-sandbox.aws.op-palvelut.net
+      - CLIENT_ID=saippuakauppias
+      - REDIRECT_URI=http://localhost
+      - REDIRECT_URI_EMBEDDED=http://localhost/embedded.php
+      - REDIRECT_URI_EMBEDDED2=http://localhost/embedded2.php
+      - PRIVATE_KEY_PATH=/var/www/privkey.pem
+      - SIGNING_KEY_PATH=/var/www/sp-signing-key.pem
+    volumes:
+      - ./html:/var/www/html
+    ports:
+      - "80:80"
