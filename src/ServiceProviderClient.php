@@ -78,9 +78,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             } else {
                 displayErrorWithTemplate($_GET['error']);
             }
-        } elseif (!isset($_GET['code'])) {
-            $_SESSION['oauth2state'] = $this->getState();
-        } elseif ($this->isStateFail()) {
+        } elseif (isset($_GET['code']) && $this->isStateFail()) {
             if (isset($_SESSION['oauth2state'])) {
                 unset($_SESSION['oauth2state']);
             }
@@ -346,6 +344,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         if ($this->_authIdp != '') {
             $options['ftn_idp_id'] = $this->_authIdp;
         }
+        $_SESSION['oauth2state'] = $options['state'];
 
         return $options;
     }
