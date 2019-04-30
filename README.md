@@ -54,7 +54,6 @@ The OP Identity Service Broker (ISB) API-documentation is available here. See ht
 ## Security limitations
 
 Please note that this integration example demo application has the following identified security issues:
-- Validation of the state - parameter in /token response is not working properly. In production this should be implemented properly
 - The following security headers are missing (in production these should be set properly):
     - The anti-clickjacking X-Frame-Options header.
     - The X-XSS-Protection header is not defined. This header can hint to the user agent to protect against some forms of XSS
