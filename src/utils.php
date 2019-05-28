@@ -106,7 +106,6 @@
         $signing_key->loadKey($private_sig_key_pem);
         $signing_key->loadKey($signing_key->getPublicKey());
         $sig_jwk = JOSE_JWK::encode($signing_key, array(
-            'kid' => hash('sha1', 'signing'),
             'use' => 'sig'
         ));
 
@@ -115,7 +114,6 @@
         $encryption_key->loadKey($private_enc_key_pem);
         $encryption_key->loadKey($encryption_key->getPublicKey());
         $enc_jwk = JOSE_JWK::encode($encryption_key, array(
-            'kid' => hash('sha1', 'encrypt'),
             'use' => 'enc'
         ));
 
