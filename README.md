@@ -63,6 +63,7 @@ Please note that this integration example demo application has the following ide
 - Cookie is not protected. In production the httpOnly flag must be added to the PHPSESSID cookie
 - The error page is vulnerable to reflected Cross-site scripting. In production there should be input validation and output encoding.
 - demo application information leakage. It is possible to get some details about the system by using malformed input parameters, or in certain case, by calling the same method again with the same information. Also errors expose details on purpose to help the integration work. In production there should be user input validations and errors should not expose details of the system.
+- nonce in ID Token is not checked against the one that was given in oauth/authorize
 
 ## Usage
 
