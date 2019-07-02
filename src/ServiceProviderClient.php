@@ -33,7 +33,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     private $_authPurpose = '';
     private $_authPrompt = false;
     private $_authIdp = '';
-    private $_authUri = '';
+    private $_tokenUri = '';
     private $_isbJwksUri = '';
     private $_clientId = '';
     private $_isbSigningKeyRefreshTime = 0;
@@ -53,9 +53,9 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         $this->clientId = $opts['clientId'];
 
         $opts['urlAuthorize'] = $opts['apiHost'].'/oauth/authorize';
-        $this->_authUri = $opts['urlAuthorize'];
         $this->_isbJwksUri = $opts['apiHost'].'/jwks/broker';
         $opts['urlAccessToken'] = $opts['apiHost'].'/oauth/token';
+        $this->_tokenUri = $opts['urlAccessToken'];
         $opts['urlResourceOwnerDetails'] = $opts['apiHost'].'/oauth/profile';
         $opts['verify'] = false;
         $opts['scope'] = 'openid profile address email phone personal_identity_code';
@@ -390,7 +390,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             $jwt = new JOSE_JWT(array(
                 'iss' => $this->clientId,
                 'sub' => $this->clientId,
-                'aud' => $this->_authUri,
+                'aud' => $this->_tokenUri,
                 'jti' => $this->getRandomState(22),
                 'exp' => time() + 10 * 60
             ));
