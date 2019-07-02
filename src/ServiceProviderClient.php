@@ -344,6 +344,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         if ($this->_authIdp != '') {
             $options['ftn_idp_id'] = $this->_authIdp;
         }
+        $options['nonce'] = $this->getRandomState(22);
         $_SESSION['oauth2state'] = $options['state'];
 
         return $options;
