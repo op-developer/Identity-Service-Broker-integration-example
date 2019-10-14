@@ -152,11 +152,9 @@ th {
   border-radius: 4px;
   border: 2px solid #035E7B;
   box-shadow: 4px 4px 0 #e4e4e4;
-  background: #f2f7f8;
   cursor: pointer;
 }
 .view .idp-buttons .idp-button button:hover {
-  background: #f7fafb;
   border-color: #357e95;
   box-shadow: 4px 4px 0 2px #e4e4e4;
 }
