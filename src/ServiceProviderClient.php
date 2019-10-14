@@ -74,7 +74,12 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     {
         if (isset($_GET['error'])) {
             if (isset($_GET['error_description'])) {
-                displayErrorWithTemplate($_GET['error'], $_GET['error_description']);
+                /* if end user has cancelled identification in embedded mode
+                    do not show error but the embedded ID wall */
+                if (strpos($_SESSION['redirectUri'], 'embedded') !== false &&
+                    $_GET['error'] !== 'cancel') {
+                    displayErrorWithTemplate($_GET['error'], $_GET['error_description']);
+                }
             } else {
                 displayErrorWithTemplate($_GET['error']);
             }

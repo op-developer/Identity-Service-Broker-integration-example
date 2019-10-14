@@ -38,10 +38,12 @@
                 <th>Name</th>
                 <td><?= $_SESSION['user']['name'] ?></td>
             </tr>
-            <tr>
-                <th>Identity code</th>
-                <td><?= $_SESSION['user']['personal_identity_code'] ?></td>
-            </tr>
+            <?php if (isset($_SESSION['user']['personal_identity_code'])) : ?>
+                <tr>
+                    <th>Identity code</th>
+                    <td><?= $_SESSION['user']['personal_identity_code'] ?></td>
+                </tr>
+            <?php endif; ?>
             <tr>
                 <th>Time of authentication</th>
                 <td><?= date("M d H:i:s", $_SESSION['user']['auth_time']) ?></td>
