@@ -74,6 +74,13 @@
         <?php elseif ($example['id'] == 2) : ?>
 
             <p><?= $embeddedInfo['isbConsent'] ?></p>
+            <?php if ($embeddedInfo['disturbanceInfo']) : ?>
+                <div class="alert -info">
+                    <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
+                    <div class="disturbanceMessage"><?= $embeddedInfo['disturbanceInfo']['text'] ?></div>
+                </div>
+                <p></p>
+            <?php endif; ?>
                 <div class="idp-buttons">
                     <?php foreach ($embeddedInfo ['identityProviders'] as $idp) { ?>
                         <div class="idp-button">
@@ -93,6 +100,13 @@
         <?php elseif ($example['id'] == 3) : ?>
 
             <p><?= $embeddedInfo['isbConsent'] ?></p>
+            <?php if ($embeddedInfo['disturbanceInfo']) : ?>
+                <div class="alert -info">
+                    <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
+                    <div class="disturbanceMessage"><?= $embeddedInfo['disturbanceInfo']['text'] ?></div>
+                </div>
+                <p></p>
+            <?php endif; ?>
                 <select name="selectedIdp" onchange="this.form.submit();this.form.reset()">
                     <option disabled selected>Select Identity Provider</option>
                     <?php foreach ($embeddedInfo['identityProviders'] as $idp) { ?>
