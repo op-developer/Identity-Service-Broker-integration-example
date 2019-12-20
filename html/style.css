@@ -205,3 +205,43 @@ th {
   height: 2.5em;
   margin-top: 2em;
 }
+
+.alert {
+  position: relative;
+  margin: auto;
+  width: 95%;
+  border-radius: 0.25em;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 0.0625em 0.125em 0 rgba(0,0,0,0.36), 0 0 0.25em 0 rgba(0,0,0,0.18);
+  text-align: left;
+}
+
+.alert::before {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 0 0.25em;
+  line-height: 2.25;
+  font-size: 1.75em;
+  font-weight: 600;
+  color: #FFFFFF;
+  content: "!";
+  background: #069AF9;
+}
+
+.alert.h2 .alert.p {
+  margin: 0.25em 0;
+}
+
+.disturbanceTitle {
+    margin-left: 2em;
+}
+
+.disturbanceMessage {
+    margin-left: 2.4em;
+    margin-top: -1em;
+    margin-bottom: 1em;
+}
