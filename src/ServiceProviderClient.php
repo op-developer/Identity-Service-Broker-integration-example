@@ -302,10 +302,13 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         // Decode the JWS token from inside the JWE token
         $jws = JOSE_JWT::decode($jwe->plain_text);
 
+        $header = $jws->header;  
+        $kid = $header['kid'];        
+
         // Verify the JWS token
         if (time() > $this->_isbSigningKeyRefreshTime) {
             // Refresh ISB signing key
-            $public_key = $this->_getIsbSigningKey();
+            $public_key = $this->_getIsbSigningKey($kid);
         }
         $jws->verify($public_key);
 
@@ -450,11 +453,17 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
      *
      * @return string public signing key
      */
-    private function _getIsbSigningKey()
+    private function _getIsbSigningKey($kid)
     {
         try {
             $isbJwkSet = json_decode($this->httpGetJson($this->_isbJwksUri, []), true);
-            $key = new JOSE_JWK($isbJwkSet['keys'][0]);
+ 
+            for ($i = 0; $i <= sizeof($isbJwkSet); $i++) {
+                if ($isbJwkSet['keys'][$i]['kid']==$kid) {
+                    $key = new JOSE_JWK($isbJwkSet['keys'][$i]);
+                }
+            }
+
             $this->_isbSigningKeyRefreshTime = time() + 10 * 60;
             return $key;
         } catch (\Throwable | \Error | \Exception $e) {
