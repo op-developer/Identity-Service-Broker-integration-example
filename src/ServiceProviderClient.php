@@ -305,11 +305,22 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         $header = $jws->header;  
         $kid = $header['kid'];        
 
-        // Verify the JWS token
-        if (time() > $this->_isbSigningKeyRefreshTime) {
-            // Refresh ISB signing key
-            $public_key = $this->_getIsbSigningKey($kid);
+        // Calculate cache experity time based on creation of cache file. In this example it is 10 minutes
+        // Of cource check that there is cache file at all 
+        if (file_exists("/tmp/isbcache.json")) {
+            $this->_isbSigningKeyRefreshTime = filemtime("/tmp/isbcache.json") + 10 * 60;
         }
+
+        // Check if there is needs for cache update. In case cache does not exist keys are always fetched
+        if (time() > $this->_isbSigningKeyRefreshTime) {
+            // Get new keys to cache (to local file) from JWKS endpoint
+            error_log("Old JWKS keys in cache, lets get new ones from JWKS");
+            $this->_getIsbSigningKeysToCache();
+        } else {
+            error_log("JWKS keys in cache, age less than 10 minutes");
+        }
+
+        $public_key = $this->_getIsbSigningKeyFromCache($kid);
         $jws->verify($public_key);
 
         $_SESSION['user'] = $jws->claims;
@@ -447,28 +458,54 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     }
 
     /**
-     * ServiceProviderClient _getIsbSigningKey
-     *
-     * fetches the public signing key from the ISB JWKS endpoint
-     *
-     * @return string public signing key
+     * ServiceProviderClient _getIsbSigningKeysToCache()
+     * 
+     * gets JWKS keys from JWKS end point and put data to local cache (file /tmp/isbcache.json)
+     * 
      */
-    private function _getIsbSigningKey($kid)
-    {
+    private function _getIsbSigningKeysToCache() {
+
         try {
-            $isbJwkSet = json_decode($this->httpGetJson($this->_isbJwksUri, []), true);
- 
-            for ($i = 0; $i <= sizeof($isbJwkSet); $i++) {
-                if ($isbJwkSet['keys'][$i]['kid']==$kid) {
-                    $key = new JOSE_JWK($isbJwkSet['keys'][$i]);
+            $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true); 
+            $this->_isbJwkSetCache = $isbJwkSetCacheTmp; 
+            $isbJwkSetCache = $isbJwkSetCacheTmp;
+            $this->_isbSigningKeyRefreshTime = time() + 10 * 60;
+
+            $file = '/tmp/isbcache.json';
+            $content = json_encode($isbJwkSetCacheTmp);
+            file_put_contents($file, $content);
+
+        } catch (\Throwable | \Error | \Exception $e) {
+            displayErrorWithTemplate(
+                'something went wrong during fetcing keys from JWKS URI',
+                $e->getMessage()
+            );
+        }       
+    }
+
+    /**
+     * ServiceProviderClient _getIsbSigningKeyFromCache($kid)
+     * 
+     * return signing key from cache by kid
+     * 
+     */
+    private function _getIsbSigningKeyFromCache($kid) {
+
+        try {
+            $file = '/tmp/isbcache.json';
+            $content = file_get_contents($file);
+            $isbJwkSetCache = json_decode($content, true);
+
+            for ($i = 0; $i < sizeof($isbJwkSetCache); $i++) {
+                if ($isbJwkSetCache['keys'][$i]['kid']==$kid) {
+                    $key = new JOSE_JWK($isbJwkSetCache['keys'][$i]);
                 }
             }
-
-            $this->_isbSigningKeyRefreshTime = time() + 10 * 60;
+    
             return $key;
         } catch (\Throwable | \Error | \Exception $e) {
             displayErrorWithTemplate(
-                'something went wrong with the ISB signing key',
+                'something went wrong with the ISB signing key fetch from cache',
                 $e->getMessage()
             );
         }
