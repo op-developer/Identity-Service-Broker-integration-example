@@ -12,6 +12,7 @@ services:
       - REDIRECT_URI_EMBEDDED2=http://localhost/embedded2.php
       - PRIVATE_KEY_PATH=/var/www/privkey.pem
       - SIGNING_KEY_PATH=/var/www/sp-signing-key.pem
+      - CACHE_REFRESH_RATE=43200
     volumes:
       - ./html:/var/www/html
     ports:

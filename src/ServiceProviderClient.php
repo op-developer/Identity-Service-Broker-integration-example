@@ -305,20 +305,17 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         $header = $jws->header;  
         $kid = $header['kid'];        
 
-        // Calculate cache experity time based on creation of cache file. In this example it is 10 minutes
+        // Calculate cache expiry time based on creation of cache file. In this example it is 10 minutes
         // Of cource check that there is cache file at all 
         if (file_exists("/tmp/isbcache.json")) {
-            $this->_isbSigningKeyRefreshTime = filemtime("/tmp/isbcache.json") + 10 * 60;
+            $this->_isbSigningKeyRefreshTime = filemtime("/tmp/isbcache.json") + getenv('CACHE_REFRESH_RATE');
         }
 
         // Check if there is needs for cache update. In case cache does not exist keys are always fetched
         if (time() > $this->_isbSigningKeyRefreshTime) {
             // Get new keys to cache (to local file) from JWKS endpoint
-            error_log("Old JWKS keys in cache, lets get new ones from JWKS");
-            $this->_getIsbSigningKeysToCache();
-        } else {
-            error_log("JWKS keys in cache, age less than 10 minutes");
-        }
+            $this->_storeIsbSigningKeysToCache();
+        } 
 
         $public_key = $this->_getIsbSigningKeyFromCache($kid);
         $jws->verify($public_key);
@@ -458,19 +455,15 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     }
 
     /**
-     * ServiceProviderClient _getIsbSigningKeysToCache()
+     * ServiceProviderClient _storeIsbSigningKeysToCache()
      * 
-     * gets JWKS keys from JWKS end point and put data to local cache (file /tmp/isbcache.json)
+     * gets JWKS keys from ISB JWKS endpoint and store keys to the local JWKS cache.  (file /tmp/isbcache.json)
      * 
      */
-    private function _getIsbSigningKeysToCache() {
+    private function _storeIsbSigningKeysToCache() {
 
         try {
             $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true); 
-            $this->_isbJwkSetCache = $isbJwkSetCacheTmp; 
-            $isbJwkSetCache = $isbJwkSetCacheTmp;
-            $this->_isbSigningKeyRefreshTime = time() + 10 * 60;
-
             $file = '/tmp/isbcache.json';
             $content = json_encode($isbJwkSetCacheTmp);
             file_put_contents($file, $content);
