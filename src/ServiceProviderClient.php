@@ -318,7 +318,25 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         } 
 
         $public_key = $this->_getIsbSigningKeyFromCache($kid);
-        $jws->verify($public_key);
+
+        // Verify signature. If this fails, lets try to retrive new keys to cache and verify again. 
+        // This is because there could be a possibility that keys has been changed and key refresh is needed
+
+        $verifyok = "";
+
+        try {
+            $jws->verify($public_key);
+            $verifyok = "Yes";
+        }
+        catch (\Throwable | \Error | \Exception $e) {
+            $verifyok = "No";
+        }
+
+        if ($verifyok!="yes") {
+            $this->_storeIsbSigningKeysToCache();
+            $public_key = $this->_getIsbSigningKeyFromCache($kid);
+            $jws->verify($public_key);            
+        }
 
         $_SESSION['user'] = $jws->claims;
 
