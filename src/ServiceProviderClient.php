@@ -307,8 +307,8 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
 
         // Calculate cache expiry time based on creation of cache file. In this example it is 10 minutes
         // Of cource check that there is cache file at all 
-        if (file_exists("/tmp/isbcache.json")) {
-            $this->_isbSigningKeyRefreshTime = filemtime("/tmp/isbcache.json") + getenv('CACHE_REFRESH_RATE');
+        if (file_exists(getenv('JWKS_CACHE_FILE'))) {
+            $this->_isbSigningKeyRefreshTime = filemtime(getenv('JWKS_CACHE_FILE')) + getenv('CACHE_REFRESH_RATE');
         }
 
         // Check if there is needs for cache update. In case cache does not exist keys are always fetched
@@ -482,7 +482,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
 
         try {
             $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true); 
-            $file = '/tmp/isbcache.json';
+            $file = getenv('JWKS_CACHE_FILE');
             $content = json_encode($isbJwkSetCacheTmp);
             file_put_contents($file, $content);
 
@@ -503,7 +503,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     private function _getIsbSigningKeyFromCache($kid) {
 
         try {
-            $file = '/tmp/isbcache.json';
+            $file = getenv('JWKS_CACHE_FILE');
             $content = file_get_contents($file);
             $isbJwkSetCache = json_decode($content, true);
 
