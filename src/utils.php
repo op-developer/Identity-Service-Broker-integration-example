@@ -83,7 +83,8 @@
             'clientId'        => getenv('CLIENT_ID'),
             'redirectUri'     => getenv($redirect_uri),
             'privateKeyPath'  => getenv('PRIVATE_KEY_PATH'),
-            'signingKeyPath'  => getenv('SIGNING_KEY_PATH')
+            'signingKeyPath'  => getenv('SIGNING_KEY_PATH'),
+            'cacheAge'        => getenv('CACHE_REFRESH_RATE')
         ];
         return $options;
     }

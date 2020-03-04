@@ -12,6 +12,11 @@ services:
       - REDIRECT_URI_EMBEDDED2=http://localhost/embedded2.php
       - PRIVATE_KEY_PATH=/var/www/privkey.pem
       - SIGNING_KEY_PATH=/var/www/sp-signing-key.pem
+      # This is jwks cache age in seconds (43200 = 12 hours)
+      - CACHE_REFRESH_RATE=43200
+      # JWKS key cache file location. Do not use /tmp as a place for cache in production environment
+      # Please see https://owasp.org/www-community/vulnerabilities/Insecure_Temporary_File
+      - JWKS_CACHE_FILE=/tmp/isbcache.json
     volumes:
       - ./html:/var/www/html
     ports:

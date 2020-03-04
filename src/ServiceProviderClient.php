@@ -302,12 +302,41 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         // Decode the JWS token from inside the JWE token
         $jws = JOSE_JWT::decode($jwe->plain_text);
 
-        // Verify the JWS token
-        if (time() > $this->_isbSigningKeyRefreshTime) {
-            // Refresh ISB signing key
-            $public_key = $this->_getIsbSigningKey();
+        $header = $jws->header;  
+        $kid = $header['kid'];        
+
+        // Calculate cache expiry time based on creation of cache file. In this example it is 10 minutes
+        // Of cource check that there is cache file at all 
+        if (file_exists(getenv('JWKS_CACHE_FILE'))) {
+            $this->_isbSigningKeyRefreshTime = filemtime(getenv('JWKS_CACHE_FILE')) + getenv('CACHE_REFRESH_RATE');
         }
-        $jws->verify($public_key);
+
+        // Check if there is needs for cache update. In case cache does not exist keys are always fetched
+        if (time() > $this->_isbSigningKeyRefreshTime) {
+            // Get new keys to cache (to local file) from JWKS endpoint
+            $this->_storeIsbSigningKeysToCache();
+        } 
+
+        $public_key = $this->_getIsbSigningKeyFromCache($kid);
+
+        // Verify signature. If this fails, lets try to retrive new keys to cache and verify again. 
+        // This is because there could be a possibility that keys has been changed and key refresh is needed
+
+        $verifyok = "";
+
+        try {
+            $jws->verify($public_key);
+            $verifyok = "Yes";
+        }
+        catch (\Throwable | \Error | \Exception $e) {
+            $verifyok = "No";
+        }
+
+        if ($verifyok!="yes") {
+            $this->_storeIsbSigningKeysToCache();
+            $public_key = $this->_getIsbSigningKeyFromCache($kid);
+            $jws->verify($public_key);            
+        }
 
         $_SESSION['user'] = $jws->claims;
 
@@ -444,22 +473,50 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     }
 
     /**
-     * ServiceProviderClient _getIsbSigningKey
-     *
-     * fetches the public signing key from the ISB JWKS endpoint
-     *
-     * @return string public signing key
+     * ServiceProviderClient _storeIsbSigningKeysToCache()
+     * 
+     * gets JWKS keys from ISB JWKS endpoint and store keys to the local JWKS cache.  (file /tmp/isbcache.json)
+     * 
      */
-    private function _getIsbSigningKey()
-    {
+    private function _storeIsbSigningKeysToCache() {
+
         try {
-            $isbJwkSet = json_decode($this->httpGetJson($this->_isbJwksUri, []), true);
-            $key = new JOSE_JWK($isbJwkSet['keys'][0]);
-            $this->_isbSigningKeyRefreshTime = time() + 10 * 60;
+            $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true); 
+            $file = getenv('JWKS_CACHE_FILE');
+            $content = json_encode($isbJwkSetCacheTmp);
+            file_put_contents($file, $content);
+
+        } catch (\Throwable | \Error | \Exception $e) {
+            displayErrorWithTemplate(
+                'something went wrong during fetcing keys from JWKS URI',
+                $e->getMessage()
+            );
+        }       
+    }
+
+    /**
+     * ServiceProviderClient _getIsbSigningKeyFromCache($kid)
+     * 
+     * return signing key from cache by kid
+     * 
+     */
+    private function _getIsbSigningKeyFromCache($kid) {
+
+        try {
+            $file = getenv('JWKS_CACHE_FILE');
+            $content = file_get_contents($file);
+            $isbJwkSetCache = json_decode($content, true);
+
+            for ($i = 0; $i < sizeof($isbJwkSetCache); $i++) {
+                if ($isbJwkSetCache['keys'][$i]['kid']==$kid) {
+                    $key = new JOSE_JWK($isbJwkSetCache['keys'][$i]);
+                }
+            }
+    
             return $key;
         } catch (\Throwable | \Error | \Exception $e) {
             displayErrorWithTemplate(
-                'something went wrong with the ISB signing key',
+                'something went wrong with the ISB signing key fetch from cache',
                 $e->getMessage()
             );
         }
