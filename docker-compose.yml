@@ -14,7 +14,7 @@ services:
       - SIGNING_KEY_PATH=/var/www/sp-signing-key.pem
       # This is jwks cache age in seconds (43200 = 12 hours)
       - CACHE_REFRESH_RATE=43200
-      # JWKS key cache file location
+      # JWKS key cache file location. Do not use /tmp as a place for cache in production environment
       - JWKS_CACHE_FILE=/tmp/isbcache.json
     volumes:
       - ./html:/var/www/html
