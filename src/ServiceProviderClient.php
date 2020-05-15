@@ -323,14 +323,17 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         // Verify signature. If this fails, lets try to retrive new keys to cache and verify again. 
         // This is because there could be a possibility that keys has been changed and key refresh is needed
 
-        $verifyok = "";
+        //$verifyok = "";
 
         try {
             $jws->verify($public_key);
-            $verifyok = "Yes";
+            //$verifyok = "Yes";
         }
         catch (\Throwable | \Error | \Exception $e) {
-            $verifyok = "No";
+            //$verifyok = "No";
+            $this->_storeIsbSigningKeysToCache();
+            $public_key = $this->_getIsbSigningKeyFromCache($kid);
+            $jws->verify($public_key); 
         }
 
         if ($verifyok!="yes") {
