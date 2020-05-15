@@ -305,7 +305,8 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         $header = $jws->header;  
         $kid = $header['kid'];        
 
-        // Calculate cache expiry time based on creation of cache file. In this example it is 10 minutes
+        // Calculate cache expiry time based on creation of cache file. 
+        // In this example it is defined in docker-compose.yml, variable CACHE_REFRESH_RATE
         // Of cource check that there is cache file at all 
         if (file_exists(getenv('JWKS_CACHE_FILE'))) {
             $this->_isbSigningKeyRefreshTime = filemtime(getenv('JWKS_CACHE_FILE')) + getenv('CACHE_REFRESH_RATE');
@@ -506,6 +507,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             $file = getenv('JWKS_CACHE_FILE');
             $content = file_get_contents($file);
             $isbJwkSetCache = json_decode($content, true);
+            $key = "";
 
             for ($i = 0; $i < sizeof($isbJwkSetCache); $i++) {
                 if ($isbJwkSetCache['keys'][$i]['kid']==$kid) {
