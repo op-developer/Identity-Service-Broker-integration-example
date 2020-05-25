@@ -302,11 +302,12 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         // Decode the JWS token from inside the JWE token
         $jws = JOSE_JWT::decode($jwe->plain_text);
 
-        $header = $jws->header;  
-        $kid = $header['kid'];        
+        $header = $jws->header;
+        $kid = $header['kid'];
 
-        // Calculate cache expiry time based on creation of cache file. In this example it is 10 minutes
-        // Of cource check that there is cache file at all 
+        // Calculate cache expiry time based on creation of cache file.
+        // In this example it is defined in docker-compose.yml, variable CACHE_REFRESH_RATE
+        // Of cource check that there is cache file at all
         if (file_exists(getenv('JWKS_CACHE_FILE'))) {
             $this->_isbSigningKeyRefreshTime = filemtime(getenv('JWKS_CACHE_FILE')) + getenv('CACHE_REFRESH_RATE');
         }
@@ -315,27 +316,29 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         if (time() > $this->_isbSigningKeyRefreshTime) {
             // Get new keys to cache (to local file) from JWKS endpoint
             $this->_storeIsbSigningKeysToCache();
-        } 
+        }
 
         $public_key = $this->_getIsbSigningKeyFromCache($kid);
 
-        // Verify signature. If this fails, lets try to retrive new keys to cache and verify again. 
+        // Verify signature. If this fails, lets try to retrive new keys to cache and verify again.
         // This is because there could be a possibility that keys has been changed and key refresh is needed
-
-        $verifyok = "";
 
         try {
             $jws->verify($public_key);
-            $verifyok = "Yes";
         }
         catch (\Throwable | \Error | \Exception $e) {
-            $verifyok = "No";
-        }
-
-        if ($verifyok!="yes") {
+            // ID Token verification failed
+            // Update the ISB signing key to the JWKS cache and re-try
             $this->_storeIsbSigningKeysToCache();
             $public_key = $this->_getIsbSigningKeyFromCache($kid);
-            $jws->verify($public_key);            
+            try {
+                $jws->verify($public_key);
+            } catch (\Throwable | \Error | \Exception $e) {
+                displayErrorWithTemplate(
+                    'ID Token verification failed',
+                    $e->getMessage()
+                );
+            }
         }
 
         $_SESSION['user'] = $jws->claims;
@@ -474,14 +477,14 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
 
     /**
      * ServiceProviderClient _storeIsbSigningKeysToCache()
-     * 
+     *
      * gets JWKS keys from ISB JWKS endpoint and store keys to the local JWKS cache.  (file /tmp/isbcache.json)
-     * 
+     *
      */
     private function _storeIsbSigningKeysToCache() {
 
         try {
-            $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true); 
+            $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true);
             $file = getenv('JWKS_CACHE_FILE');
             $content = json_encode($isbJwkSetCacheTmp);
             file_put_contents($file, $content);
@@ -491,14 +494,14 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
                 'something went wrong during fetcing keys from JWKS URI',
                 $e->getMessage()
             );
-        }       
+        }
     }
 
     /**
      * ServiceProviderClient _getIsbSigningKeyFromCache($kid)
-     * 
+     *
      * return signing key from cache by kid
-     * 
+     *
      */
     private function _getIsbSigningKeyFromCache($kid) {
 
@@ -506,13 +509,14 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             $file = getenv('JWKS_CACHE_FILE');
             $content = file_get_contents($file);
             $isbJwkSetCache = json_decode($content, true);
+            $key = "";
 
             for ($i = 0; $i < sizeof($isbJwkSetCache); $i++) {
                 if ($isbJwkSetCache['keys'][$i]['kid']==$kid) {
                     $key = new JOSE_JWK($isbJwkSetCache['keys'][$i]);
                 }
             }
-    
+
             return $key;
         } catch (\Throwable | \Error | \Exception $e) {
             displayErrorWithTemplate(
