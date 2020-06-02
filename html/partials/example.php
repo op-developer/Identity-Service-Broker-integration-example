@@ -74,7 +74,7 @@
         <?php elseif ($example['id'] == 2) : ?>
 
             <p><?= $embeddedInfo['isbConsent'] ?></p>
-            <?php if ($embeddedInfo['disturbanceInfo']) : ?>
+            <?php if (array_key_exists('disturbanceInfo', $embeddedInfo)) : ?>
                 <div class="alert -info">
                     <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
                     <div class="disturbanceMessage"><?= $embeddedInfo['disturbanceInfo']['text'] ?></div>
@@ -100,7 +100,7 @@
         <?php elseif ($example['id'] == 3) : ?>
 
             <p><?= $embeddedInfo['isbConsent'] ?></p>
-            <?php if ($embeddedInfo['disturbanceInfo']) : ?>
+            <?php if (array_key_exists('disturbanceInfo', $embeddedInfo)) : ?>
                 <div class="alert -info">
                     <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
                     <div class="disturbanceMessage"><?= $embeddedInfo['disturbanceInfo']['text'] ?></div>
