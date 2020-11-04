@@ -139,7 +139,8 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     {
         try {
                 if (!isset($jsonToCheck['identityProviders']) || !isset($jsonToCheck['isbProviderInfo']) ||
-                    !isset($jsonToCheck['isbConsent'])) {
+                    !isset($jsonToCheck['isbConsent']) || !isset($jsonToCheck['privacyNoticeLink']) ||
+                    !isset($jsonToCheck['privacyNoticeText'])) {
                         displayErrorWithTemplate('embedded UI data validation failed');
                 }
         }

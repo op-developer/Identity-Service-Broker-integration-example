@@ -206,6 +206,10 @@ th {
   margin-top: 2em;
 }
 
+.view-left {
+  text-align: left;
+}
+
 .alert {
   position: relative;
   margin: auto;
