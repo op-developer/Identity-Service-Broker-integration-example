@@ -59,6 +59,10 @@
             <ul>
                 <li><?= $embeddedInfo['isbConsent'] ?></li>
                 <li><?= $embeddedInfo['isbProviderInfo'] ?></li>
+                <li>
+                    <a href=<?= $embeddedInfo['privacyNoticeLink'] ?> target="_blank"><?= $embeddedInfo['privacyNoticeText'] ?>
+                    </a>
+                </li>
             </ul>
         </div>
     <?php endif; ?>
@@ -73,7 +77,11 @@
 
         <?php elseif ($example['id'] == 2) : ?>
 
-            <p><?= $embeddedInfo['isbConsent'] ?></p>
+            <p class="view-left"><?= $embeddedInfo['isbConsent'] ?></p>
+            <p class="view-left">
+                <a href=<?= $embeddedInfo['privacyNoticeLink'] ?> target="_blank"><?= $embeddedInfo['privacyNoticeText'] ?>
+                </a>
+            </p>
             <?php if (array_key_exists('disturbanceInfo', $embeddedInfo)) : ?>
                 <div class="alert -info">
                     <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
@@ -95,11 +103,15 @@
                         <?php
                     } ?>
                 </div>
-            <p><?= $embeddedInfo['isbProviderInfo'] ?></p>
+            <p class="view-left"><?= $embeddedInfo['isbProviderInfo'] ?></p>
 
         <?php elseif ($example['id'] == 3) : ?>
 
-            <p><?= $embeddedInfo['isbConsent'] ?></p>
+            <p class="view-left"><?= $embeddedInfo['isbConsent'] ?></p>
+            <p class="view-left">
+                <a href=<?= $embeddedInfo['privacyNoticeLink'] ?> target="_blank"><?= $embeddedInfo['privacyNoticeText'] ?>
+                </a>
+            </p>
             <?php if (array_key_exists('disturbanceInfo', $embeddedInfo)) : ?>
                 <div class="alert -info">
                     <h3 class="disturbanceTitle"> <?= $embeddedInfo['disturbanceInfo']['header'] ?> </h3>
@@ -113,7 +125,7 @@
                         <option value="<?= $idp['ftn_idp_id'] ?>"><?= $idp['name'] ?></option>
                     <?php } ?>
                 </select>
-            <p><?= $embeddedInfo['isbProviderInfo'] ?></p>
+            <p class="view-left"><?= $embeddedInfo['isbProviderInfo'] ?></p>
 
         <?php endif; ?>
 

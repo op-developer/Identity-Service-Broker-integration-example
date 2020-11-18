@@ -29,6 +29,7 @@
      */
     $requestParams = [];
     $json_data = $client->httpGetJson($options['apiHost']."/api/embedded-ui/".$options['clientId'].'?lang=en', $requestParams);
+    $json_data = strip_tags($json_data); // remove possible html
     $json_data = str_replace('\r\n', '<br><br>', $json_data); // handle multi-line disturbance notifications properly
     $embeddedInfo = json_decode($json_data, true);
     $client->validateEmbeddedUIJson($embeddedInfo);
