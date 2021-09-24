@@ -1,5 +1,5 @@
 FROM boxedcode/alpine-nginx-php-fpm:latest
-COPY --from=composer:1.5 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.1.8 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 # remove unnecessary folder from parent image
 RUN rm -rf localhost
