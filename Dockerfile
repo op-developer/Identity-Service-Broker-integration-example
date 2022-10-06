@@ -1,5 +1,8 @@
 FROM boxedcode/alpine-nginx-php-fpm:latest
 COPY --from=composer:2.1.8 /usr/bin/composer /usr/bin/composer
+# copy nxing.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 WORKDIR /var/www
 # remove unnecessary folder from parent image
 RUN rm -rf localhost

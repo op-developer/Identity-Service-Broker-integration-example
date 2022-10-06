@@ -61,11 +61,6 @@
 
         /**
          * Options for the ServiceProviderClient
-         *
-         * @var apiHost          OP api host (sandbox/prod)
-         * @var clientId         Personal id from the extranet
-         * @var clientSecret     Personal secret from the extranet
-         * @var redirectUri      Url to redirect the user to after authentication
          */
         switch($page) {
             case 'embedded':
@@ -81,6 +76,7 @@
         $options = [
             'apiHost'         => getenv('API_HOST'),
             'clientId'        => getenv('CLIENT_ID'),
+            'ftnSpname'       => getenv('FTN_SPNAME'),
             'redirectUri'     => getenv($redirect_uri),
             'privateKeyPath'  => getenv('PRIVATE_KEY_PATH'),
             'signingKeyPath'  => getenv('SIGNING_KEY_PATH'),
@@ -90,19 +86,19 @@
     }
 
     /**
-     * utils getJwks
-     * returns JWKSet
+     * utils getSignedJwks
+     * returns JWS containing the JWKSet
      *
      *
      * @return string JWK set
      */
-    function getJwks()
+    function getSignedJwks()
     {
 
         $private_enc_key_pem  = file_get_contents(getenv('PRIVATE_KEY_PATH'));
         $private_sig_key_pem  = file_get_contents(getenv('SIGNING_KEY_PATH'));
 
-        // signalling key
+        // signing key
         $signing_key = new phpseclib\Crypt\RSA();
         $signing_key->loadKey($private_sig_key_pem);
         $signing_key->loadKey($signing_key->getPublicKey());
@@ -118,12 +114,91 @@
             'use' => 'enc'
         ));
 
+        // make JWKSet
         $keys = array($enc_jwk,$sig_jwk);
-
         $jwks = new JOSE_JWKSet($keys);
+
+        // create JSON web token
+        $jwt = new JOSE_JWT(array(
+            'keys' => json_decode($jwks->toString(), true)['keys'],
+            'iss' => getenv('REDIRECT_URI'),
+            'sub' => getenv('REDIRECT_URI'),
+            'iat' => time(),
+            'exp' => time() + 25 * 60 * 60 // 25 hours
+        ));
+
+        // create entity signing key
+        $entity_signing_key_pem = file_get_contents(getenv('ENTITY_SIGNING_KEY_PATH'));
+        $entity_signing_key = new phpseclib\Crypt\RSA();
+        $entity_signing_key->loadKey($entity_signing_key_pem);
+        $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key);
+
+        // sign the JSON web token
+        $jws = $jwt->sign($entity_signing_key, 'RS256');
+        // add kid manually
+        $jws->header['kid'] = $entity_sig_jwk->thumbprint();
+
         header_remove();
         http_response_code(200);
-        header('Content-Type: application/json');
-        echo($jwks->toString());
+        header('Content-Type: application/jose');
+        echo($jws->toString());
+    }
+
+    /**
+     * utils getEntityStatement
+     * returns Entity Statement of the Service Provider
+     *
+     *
+     * @return string Entity Statement
+     */
+    function getEntityStatement()
+    {
+        // create keyset
+        $entity_signing_key_pem = file_get_contents(getenv('ENTITY_SIGNING_KEY_PATH'));
+        $entity_signing_key = new phpseclib\Crypt\RSA();
+        $entity_signing_key->loadKey($entity_signing_key_pem);
+        $entity_signing_key->loadKey($entity_signing_key->getPublicKey());
+        $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key,array(
+            'use' => 'sig'
+        ));
+
+        // make JWKSet
+        $keys = array($entity_sig_jwk);
+        $jwks = new JOSE_JWKSet($keys);
+
+        // create Entity Statement JSON web token
+        $openid_relying_party = array(
+            'redirect_uris' => array(getenv('REDIRECT_URI').'/oauth/code'),
+            'application_type' => 'web',
+            'id_token_signed_response_alg' => 'RS256',
+            'id_token_encrypted_response_alg' => 'RSA-OAEP',
+            'id_token_encrypted_response_enc' => 'A128CBC-HS256',
+            'request_object_signing_alg' => 'RS256',
+            'token_endpoint_auth_method' => 'private_key_jwt',
+            'token_endpoint_auth_signing_alg' => 'RS256',
+            'client_registration_types' => array(),
+            'organization_name' => 'Saippuakauppias',
+            'signed_jwks_uri' => getenv('REDIRECT_URI').'/signed-jwks'
+        );
+        $jwt = new JOSE_JWT(array(
+            'iss' => getenv('REDIRECT_URI'),
+            'sub' => getenv('REDIRECT_URI'),
+            'iat' => time(),
+            'exp' => time() + 25 * 60 * 60, // 25 hours
+            'jwks' => json_decode($jwks->toString(), true),
+            'metada' => array('openid_relying_party' => $openid_relying_party)
+        ));
+
+        // sign the Entity Statement
+        $jws = $jwt->sign($entity_signing_key, 'RS256');
+
+         // add kid manually and define typ
+         $jws->header['kid'] = $entity_sig_jwk->thumbprint();
+         $jws->header['typ'] = 'entity-statement+jwt';
+
+         header_remove();
+         http_response_code(200);
+         header('Content-Type: application/entity-statement+jwt');
+         echo($jws->toString());
     }
 ?>

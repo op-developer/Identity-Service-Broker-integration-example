@@ -7,11 +7,14 @@ services:
     environment:
       - API_HOST=https://isb-test.op.fi
       - CLIENT_ID=saippuakauppias
+      - FTN_SPNAME=soap merchant
       - REDIRECT_URI=http://localhost
       - REDIRECT_URI_EMBEDDED=http://localhost/embedded.php
       - REDIRECT_URI_EMBEDDED2=http://localhost/embedded2.php
       - PRIVATE_KEY_PATH=/var/www/privkey.pem
       - SIGNING_KEY_PATH=/var/www/sp-signing-key.pem
+      - ENTITY_SIGNING_KEY_PATH=/var/www/sandbox-sp-entity-signing-key.pem
+      - ISB_ENTITY_SIGNING_KEY_PATH=/var/www/sandbox-isb-entity-signing-pubkey.pem
       # This is jwks cache age in seconds (43200 = 12 hours)
       - CACHE_REFRESH_RATE=43200
       # JWKS key cache file location. Do not use /tmp as a place for cache in production environment
