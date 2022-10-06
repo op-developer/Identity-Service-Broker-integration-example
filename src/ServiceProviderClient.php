@@ -503,7 +503,9 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             }
             // verify IAT and EXP
             $timeNow = time();
-            if ($jws->claims['iat'] > $timeNow or $jws->claims['exp'] < $jws->claims['iat'] ) {
+            if ($jws->claims['iat'] > $timeNow or
+                $jws->claims['exp'] < $jws->claims['iat'] or
+                $jws->claims['exp'] < $timeNow ) {
                 throw new \Exception('Verifying IAT and EXP failed');
             }
 
