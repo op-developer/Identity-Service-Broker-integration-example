@@ -7,7 +7,7 @@ services:
     environment:
       - API_HOST=https://isb-test.op.fi
       - CLIENT_ID=saippuakauppias
-      - FTN_SPNAME=soap merchant
+      - FTN_SPNAME=Soap for the people
       - REDIRECT_URI=http://localhost
       - REDIRECT_URI_EMBEDDED=http://localhost/embedded.php
       - REDIRECT_URI_EMBEDDED2=http://localhost/embedded2.php
