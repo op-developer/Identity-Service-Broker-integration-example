@@ -36,6 +36,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     private $_tokenUri = '';
     private $_isbJwksUri = '';
     private $_clientId = '';
+    private $_ftn_spname = '';
     private $_isbSigningKeyRefreshTime = 0;
 
     /**
@@ -51,9 +52,10 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         $this->privateKeyPath = $opts['privateKeyPath'];
         $this->signingKeyPath = $opts['signingKeyPath'];
         $this->clientId = $opts['clientId'];
+        $this->_ftn_spname = $opts['ftnSpname'];
 
         $opts['urlAuthorize'] = $opts['apiHost'].'/oauth/authorize';
-        $this->_isbJwksUri = $opts['apiHost'].'/jwks/broker';
+        $this->_isbJwksUri = $opts['apiHost'].'/jwks/broker-signed';
         $opts['urlAccessToken'] = $opts['apiHost'].'/oauth/token';
         $this->_tokenUri = $opts['urlAccessToken'];
         $opts['urlResourceOwnerDetails'] = $opts['apiHost'].'/oauth/profile';
@@ -383,6 +385,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             $options['ftn_idp_id'] = $this->_authIdp;
         }
         $options['nonce'] = $this->getRandomState(22);
+        $options['ftn_spname'] = $this->_ftn_spname;
         $_SESSION['oauth2state'] = $options['state'];
 
         return $options;
@@ -485,9 +488,30 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
     private function _storeIsbSigningKeysToCache() {
 
         try {
-            $isbJwkSetCacheTmp = json_decode($this->httpGetJson($this->_isbJwksUri, []), true);
+            // Read JWS containing ISB JWKS
+            $jwks_resp =  $this->httpGetJson($this->_isbJwksUri, []);
+            // decode the response
+            $jws = JOSE_JWT::decode($jwks_resp);
+
+            // verify signature
+            $isb_entity_pubkey_pem = file_get_contents(getenv('ISB_ENTITY_SIGNING_KEY_PATH'));
+            $jws->verify($isb_entity_pubkey_pem);
+
+            // Verify ISS and SUB
+            if ($jws->claims['sub'] != $jws->claims['iss']) {
+                throw new \Exception('Verifying ISS or SUB failed');
+            }
+            // verify IAT and EXP
+            $timeNow = time();
+            if ($jws->claims['iat'] > $timeNow or
+                $jws->claims['exp'] < $jws->claims['iat'] or
+                $jws->claims['exp'] < $timeNow ) {
+                throw new \Exception('Verifying IAT and EXP failed');
+            }
+
+            // store ISB keys
             $file = getenv('JWKS_CACHE_FILE');
-            $content = json_encode($isbJwkSetCacheTmp);
+            $content = json_encode($jws->claims);
             file_put_contents($file, $content);
 
         } catch (\Throwable | \Error | \Exception $e) {

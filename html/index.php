@@ -40,8 +40,10 @@
         handleRedirect($client);
     }
 
-    if ($_SERVER['REQUEST_URI'] == '/jwks') {
-        getJwks();
+    if ($_SERVER['REQUEST_URI'] == '/signed-jwks') {
+        getSignedJwks();
+    } else if ($_SERVER['REQUEST_URI'] == '/.well-known/openid-federation') {
+        getEntityStatement();
     } else {
 
         /**
