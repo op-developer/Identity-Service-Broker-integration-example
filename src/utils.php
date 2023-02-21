@@ -140,7 +140,7 @@
 
         header_remove();
         http_response_code(200);
-        header('Content-Type: application/jose');
+        header('Content-Type: application/jwk-set+jwt');
         echo($jws->toString());
     }
 
