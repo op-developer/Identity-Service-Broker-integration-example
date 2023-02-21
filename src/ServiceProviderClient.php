@@ -489,7 +489,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
 
         try {
             // Read JWS containing ISB JWKS
-            $jwks_resp =  $this->httpGetJson($this->_isbJwksUri, []);
+            $jwks_resp =  $this->httpGetJson($this->_isbJwksUri, ['Accept: application/jwk-set+jwt']);
             // decode the response
             $jws = JOSE_JWT::decode($jwks_resp);
 
@@ -536,7 +536,7 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
             $isbJwkSetCache = json_decode($content, true);
             $key = "";
 
-            for ($i = 0; $i < sizeof($isbJwkSetCache); $i++) {
+            for ($i = 0; $i < sizeof($isbJwkSetCache['keys']); $i++) {
                 if ($isbJwkSetCache['keys'][$i]['kid']==$kid) {
                     $key = new JOSE_JWK($isbJwkSetCache['keys'][$i]);
                 }
