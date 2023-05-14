@@ -133,10 +133,12 @@
         $entity_signing_key->loadKey($entity_signing_key_pem);
         $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key);
 
-        // sign the JSON web token
-        $jws = $jwt->sign($entity_signing_key, 'RS256');
         // add kid manually
+        $jws = new JOSE_JWS($jwt);
         $jws->header['kid'] = $entity_sig_jwk->thumbprint();
+
+        // sign the JSON web token
+        $jws = $jws->sign($entity_signing_key_pem, 'RS256');
 
         header_remove();
         http_response_code(200);
@@ -157,8 +159,11 @@
         $entity_signing_key_pem = file_get_contents(getenv('ENTITY_SIGNING_KEY_PATH'));
         $entity_signing_key = new phpseclib\Crypt\RSA();
         $entity_signing_key->loadKey($entity_signing_key_pem);
-        $entity_signing_key->loadKey($entity_signing_key->getPublicKey());
-        $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key,array(
+
+        // Public key
+        $entity_signing_key_pub = new phpseclib\Crypt\RSA();
+        $entity_signing_key_pub->loadKey($entity_signing_key->getPublicKey());
+        $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key_pub,array(
             'use' => 'sig'
         ));
 
@@ -184,17 +189,20 @@
             'iss' => getenv('REDIRECT_URI'),
             'sub' => getenv('REDIRECT_URI'),
             'iat' => time(),
-            'exp' => time() + 25 * 60 * 60, // 25 hours
+            'exp' => time() + 60 * 60 * 24 * 365 * 10, // 10 years
             'jwks' => json_decode($jwks->toString(), true),
-            'metada' => array('openid_relying_party' => $openid_relying_party)
+            'metadata' => array('openid_relying_party' => $openid_relying_party)
         ));
 
-        // sign the Entity Statement
-        $jws = $jwt->sign($entity_signing_key, 'RS256');
 
          // add kid manually and define typ
+         $jws = new JOSE_JWS($jwt);
          $jws->header['kid'] = $entity_sig_jwk->thumbprint();
          $jws->header['typ'] = 'entity-statement+jwt';
+
+         // sign the Entity Statement
+         $jws = $jws->sign($entity_signing_key_pem, 'RS256');
+
 
          header_remove();
          http_response_code(200);
