@@ -1,6 +1,6 @@
 <?php
     /**
-     * PHP Version 7
+     * PHP Version 8
      * Utils File Doc Comment
      *
      * @category File
@@ -9,6 +9,9 @@
      * @license  http://www.gnu.org/copyleft/gpl.html GNU General Public License
      * @link     https://www.op.fi/
      */
+
+    require_once dirname(__DIR__) . '/vendor/autoload.php';
+    use phpseclib\Crypt\RSA;
 
     /**
      * utils handleToken
@@ -99,7 +102,7 @@
         $private_sig_key_pem  = file_get_contents(getenv('SIGNING_KEY_PATH'));
 
         // signing key
-        $signing_key = new phpseclib\Crypt\RSA();
+        $signing_key = new RSA();
         $signing_key->loadKey($private_sig_key_pem);
         $signing_key->loadKey($signing_key->getPublicKey());
         $sig_jwk = JOSE_JWK::encode($signing_key, array(
@@ -107,7 +110,7 @@
         ));
 
         // encryption key
-        $encryption_key = new phpseclib\Crypt\RSA();
+        $encryption_key = new RSA();
         $encryption_key->loadKey($private_enc_key_pem);
         $encryption_key->loadKey($encryption_key->getPublicKey());
         $enc_jwk = JOSE_JWK::encode($encryption_key, array(
@@ -129,7 +132,7 @@
 
         // create entity signing key
         $entity_signing_key_pem = file_get_contents(getenv('ENTITY_SIGNING_KEY_PATH'));
-        $entity_signing_key = new phpseclib\Crypt\RSA();
+        $entity_signing_key = new RSA();
         $entity_signing_key->loadKey($entity_signing_key_pem);
         $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key);
 
@@ -157,11 +160,11 @@
     {
         // create keyset
         $entity_signing_key_pem = file_get_contents(getenv('ENTITY_SIGNING_KEY_PATH'));
-        $entity_signing_key = new phpseclib\Crypt\RSA();
+        $entity_signing_key = new RSA();
         $entity_signing_key->loadKey($entity_signing_key_pem);
 
         // Public key
-        $entity_signing_key_pub = new phpseclib\Crypt\RSA();
+        $entity_signing_key_pub = new RSA();
         $entity_signing_key_pub->loadKey($entity_signing_key->getPublicKey());
         $entity_sig_jwk = JOSE_JWK::encode($entity_signing_key_pub,array(
             'use' => 'sig'
@@ -195,18 +198,18 @@
         ));
 
 
-         // add kid manually and define typ
-         $jws = new JOSE_JWS($jwt);
-         $jws->header['kid'] = $entity_sig_jwk->thumbprint();
-         $jws->header['typ'] = 'entity-statement+jwt';
+        // add kid manually and define typ
+        $jws = new JOSE_JWS($jwt);
+        $jws->header['kid'] = $entity_sig_jwk->thumbprint();
+        $jws->header['typ'] = 'entity-statement+jwt';
 
-         // sign the Entity Statement
-         $jws = $jws->sign($entity_signing_key_pem, 'RS256');
+        // sign the Entity Statement
+        $jws = $jws->sign($entity_signing_key_pem, 'RS256');
 
 
-         header_remove();
-         http_response_code(200);
-         header('Content-Type: application/entity-statement+jwt');
-         echo($jws->toString());
+        header_remove();
+        http_response_code(200);
+        header('Content-Type: application/entity-statement+jwt');
+        echo($jws->toString());
     }
 ?>
