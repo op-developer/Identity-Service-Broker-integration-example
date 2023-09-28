@@ -1,6 +1,6 @@
 {
     "require": {
-        "league/oauth2-client": "2.6.1",
+        "league/oauth2-client": "2.7.0",
         "gree/jose": "2.2.1",
         "phpseclib/phpseclib": "^2.0"
     },
