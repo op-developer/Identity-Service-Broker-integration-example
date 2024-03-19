@@ -13,6 +13,8 @@ namespace Osuuspankki;
 
 use JOSE_JWT;
 use JOSE_JWK;
+use JOSE_JWS;
+use phpseclib\Crypt\RSA;
 require_once 'error.php'; // displays errors
 
 /**
@@ -404,8 +406,16 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
         try {
             // add query parameters as claims in JWS token
             $jwt = new JOSE_JWT($params);
-            $signing_key  = file_get_contents($this->getSigningKeyPath());
-            $jws = $jwt->sign($signing_key, 'RS256');
+            // handle signing key
+            $signing_key_pem = file_get_contents($this->getSigningKeyPath());
+            $signing_key = new RSA();
+            $signing_key->loadKey($signing_key_pem);
+            $signing_key_jwk = JOSE_JWK::encode($signing_key);
+            // add kid manually
+            $jws = new JOSE_JWS($jwt);
+            $jws->header['kid'] = $signing_key_jwk->thumbprint();
+            // sign
+            $jws = $jws->sign($signing_key_pem, 'RS256');
             $query_param = [];
             $query_param['request'] = $jws->toString();
             return $this->buildQueryString($query_param);
@@ -435,8 +445,17 @@ class ServiceProviderClient extends \League\OAuth2\Client\Provider\GenericProvid
                 'jti' => $this->getRandomState(22),
                 'exp' => time() + 10 * 60
             ));
-            $signing_key  = file_get_contents($this->getSigningKeyPath());
-            $jws = $jwt->sign($signing_key, 'RS256');
+            // handle signing key
+            $signing_key_pem = file_get_contents($this->getSigningKeyPath());
+            $signing_key = new RSA();
+            $signing_key->loadKey($signing_key_pem);
+            $signing_key_jwk = JOSE_JWK::encode($signing_key);
+            // add kid manually
+            $jws = new JOSE_JWS($jwt);
+            $jws->header['kid'] = $signing_key_jwk->thumbprint();
+            // sign
+            $jws = $jws->sign($signing_key_pem, 'RS256');
+
             return $jws->toString();
         } catch (\Throwable | \Error | \Exception $e) {
             displayErrorWithTemplate(
