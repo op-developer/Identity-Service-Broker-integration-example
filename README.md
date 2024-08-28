@@ -1,5 +1,7 @@
 # Service Provider integration example for the OP Identity Service Broker
 
+Warning: This integration example is deprecated and will not be updated anymore. Current version is depending on a very old JOSE (gree/jose) library which is abandoned. JOSE itself depends on phpseclib 2.x and does not work with phpseclib 3.x. Code in general is written in oldish style and the structure is not ideal. Therefore the example is deprecated.
+
 This repository provides an easy way to test OP identification
 services. It also serves as a PHP-based implementation example to help Servide Providers (SP) to integrate to the OP Identitity Service Broker (ISB).
 
